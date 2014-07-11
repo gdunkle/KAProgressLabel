@@ -8,12 +8,45 @@
 
 #import <QuartzCore/QuartzCore.h>
 #import "KAProgressLabel.h"
-
+@interface KAProgressLabel()
+@property (nonatomic) BOOL runIndeterminate;
+@property (copy) void (^indeterminateAnimation)();
+@property (nonatomic) CGFloat indeterminateStartDegree;
+@property (nonatomic) CGFloat indeterminateEndDegree;
+@end
 
 @implementation KAProgressLabel {
     radiansFromDegreesCompletion _radiansFromDegrees;
 }
 
+-(void)startIndeterminate{
+    if(!_runIndeterminate){
+        [self setProgress:100.0f];
+        _indeterminateStartDegree=0;
+        _indeterminateEndDegree=90;
+        [self setStartDegree:_indeterminateStartDegree];
+        [self setEndDegree:_indeterminateEndDegree];
+        _runIndeterminate=true;
+        [self animateIntermediate];
+    }
+}
+-(void)animateIntermediate{
+      KAProgressLabel __block *blockSelf=self;
+    [UIView animateWithDuration:1.0f animations:_indeterminateAnimation completion:^(BOOL finished) {
+        if(_runIndeterminate){
+            finished=false;
+            [blockSelf animateIntermediate];
+        }else{
+            finished=true;
+            [blockSelf setStartDegree:0];
+            [blockSelf setEndDegree:0];
+
+        }
+    }];
+}
+-(void)stopIndeterminate{
+    _runIndeterminate=false;
+}
 
 #pragma mark Core
 
@@ -38,7 +71,24 @@
     _radiansFromDegrees = ^(CGFloat degrees) {
         return (CGFloat)((degrees) / 180.0 * M_PI);
     };
+    KAProgressLabel __block *blockSelf=self;
+    _indeterminateAnimation=^{
+        if( blockSelf.indeterminateStartDegree+1>360){
+            blockSelf.indeterminateStartDegree=0;
+        }else{
+            blockSelf.indeterminateStartDegree++;
+        }
+        if(blockSelf.indeterminateEndDegree+1>360){
+            blockSelf.indeterminateEndDegree=0;
+        }else{
+            blockSelf.indeterminateEndDegree++;
+        }
+        [blockSelf setStartDegree:blockSelf.indeterminateStartDegree];
+        [blockSelf setEndDegree:blockSelf.indeterminateEndDegree];
+        [blockSelf setNeedsDisplay];
 
+    };
+    _runIndeterminate=false;
     _backBorderWidth = 5.0f - .2f;
     _frontBorderWidth = 5.0f;
     _startDegree = -90;
@@ -110,7 +160,6 @@
 
 -(void)setProgress:(CGFloat)progress {
     if(_progress != progress) {
-
         _progress = progress;
 
         [self setStartDegree:0.0];
@@ -137,6 +186,7 @@
     animation.startDelay = delay;
     animation.timing = timing;
     [animation beginWithTarget:self];
+
 }
 
 
@@ -242,6 +292,7 @@ UIColor *UIColorDefaultForColorInProgressLabelColorTableKey(ProgressLabelColorTa
     CGContextSetLineWidth(context, _backBorderWidth);
     CGContextAddEllipseInRect(context, circleRect);
     CGContextFillPath(context);
+
 
     // Back border
     CGContextSetStrokeColorWithColor(context, trackColor.CGColor);

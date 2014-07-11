@@ -51,6 +51,8 @@ UIColor *UIColorDefaultForColorInProgressLabelColorTableKey(ProgressLabelColorTa
 // Progress is a float between 0.0 and 1.0
 -(void)setProgress:(CGFloat)progress;
 -(void)setProgress:(CGFloat)progress timing:(TPPropertyAnimationTiming)timing duration:(CGFloat) duration delay:(CGFloat)delay;
+-(void)startIndeterminate;
+-(void)stopIndeterminate;
 
 
 @end
